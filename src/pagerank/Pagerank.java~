@@ -1,0 +1,138 @@
+import java.util.*;
+
+public class PagerankAl
+{
+
+    public static void pagerank(String inputfile, String outputfile, int iteration, double damping_factor)
+    {
+        int num_urls = 0;
+                
+        HashMap adjacency_matrix = new HashMap();
+        HashMap rank_values_table = new HashMap();
+        build_adjacency_matrix(adjacency_matrix, inputfile);
+        num_urls = adjacency_matrix.keySet().size();
+                
+        
+                init_rank_value_table(rank_values_table, num_urls);
+ 
+        for(int k = 0; k < iteration; k++)
+                join_rvt_am(rank_values_table, adjacency_matrix, num_urls, damping_factor);
+
+        try
+        {
+            FileWriter filewriter = new FileWriter(outputfile);
+            BufferedWriter bufferedwriter = new BufferedWriter(filewriter);
+            int l;
+            for(Iterator iterator = rank_values_table.keySet().iterator(); iterator.hasNext(); bufferedwriter.write((new StringBuilder()).append(l).append(" ").append(rank_values_table.get(Integer.valueOf(l))).append("\n").toString()))
+                l = ((Integer)iterator.next()).intValue();
+
+            bufferedwriter.close();
+        }
+        catch(IOException ioexception)
+        {
+            ioexception.getMessage();
+        }
+    }
+
+    public static void join_rvt_am(HashMap rank_values_table, HashMap adjacency_matrix, int num_urls, double damping_factor)
+    {
+        Iterator iterator = adjacency_matrix.keySet().iterator();
+        HashMap intermediate_rvt = new HashMap();
+        for(int l = 0; l < num_urls; l++)
+            intermediate_rvt.put(Integer.valueOf(l), Double.valueOf(0.0));
+
+        double dangling_value = 0.0;
+        do
+        {
+            if(!iterator.hasNext())
+                break;
+            int source_url = ((Integer)iterator.next()).intValue();
+          
+            ArrayList target_url_list = (ArrayList)adjacency_matrix.get(Integer.valueOf(source_url));
+            int outdegree_of_source_url = target_url_list.size();
+        
+            for(int j1 = 0; j1 < outdegree_of_source_url; j1++)
+              System.out.print((new StringBuilder()).append(((Integer)target_url_list.get(j1)).intValue()).append(" ").toString());
+                        
+                        for(int i = 0; i < outdegree_of_source_url; i++)
+            {
+                int target_url = ((Integer)target_url_list.get(i)).intValue();
+                double intermediate_rank_value = ((Double)intermediate_rvt.get(Integer.valueOf(target_url))).doubleValue() + ((Double)rank_values_table.get(Integer.valueOf(source_url))).doubleValue() / (double)outdegree_of_source_url;
+            
+                intermediate_rvt.put(Integer.valueOf(target_url), Double.valueOf(intermediate_rank_value));
+            }
+
+            if(outdegree_of_source_url == 0)
+                dangling_value += ((Double)rank_values_table.get(Integer.valueOf(source_url))).doubleValue();
+        } while(true);
+        double dangling_value_per_page = dangling_value / (double)num_urls;
+        for(int l1 = 0; l1 < num_urls; l1++)
+            rank_values_table.put(Integer.valueOf(l1), Double.valueOf(((Double)intermediate_rvt.get(Integer.valueOf(l1))).doubleValue() + dangling_value_per_page));
+
+     
+        for(int i2 = 0; i2 < num_urls; i2++)
+            rank_values_table.put(Integer.valueOf(i2), Double.valueOf(damping_factor * ((Double)rank_values_table.get(Integer.valueOf(i2))).doubleValue() + (1.0 - damping_factor) * 1.0/(double)num_urls));
+
+    }
+
+        //Table that store intermediate rank values within one iteration
+        public static void init_rank_value_table(HashMap hashmap, int num_urls)
+    {
+                /* assign the initial rank value for each web page */
+                
+                if(rank==0)
+                {
+        double initial_rank_value_per_page = 1.0 / (double)num_urls;
+        for(int i = 0; i < num_urls; i++)
+            hashmap.put(Integer.valueOf(i), Double.valueOf(initial_rank_value_per_page));
+                }
+
+                // broad cast the intial rank values to all other compute nodes */
+                MPI_Bcast(hashmap,num_urls,MPI_DOUBLE, 0, MPI_COMM_WORLD);
+                
+    }
+
+    public static void build_adjacency_matrix(HashMap hashmap, String s)
+    {
+        try
+        {
+            FileReader filereader = new FileReader(s);
+            BufferedReader bufferedreader = new BufferedReader(filereader);
+            String s1;
+            while((s1 = bufferedreader.readLine()) != null) 
+            {
+                String as[] = s1.split(" ");
+                int i = Integer.parseInt(as[0]);
+                ArrayList arraylist = new ArrayList();
+                for(int k = 1; k < as.length; k++)
+                {
+                    int j = Integer.parseInt(as[k]);
+                    arraylist.add(Integer.valueOf(j));
+                }
+
+                hashmap.put(Integer.valueOf(i), arraylist);
+            }
+        }
+        catch(IOException ioexception)
+        {
+            ioexception.printStackTrace();
+        }
+    }
+        
+        public static void main(String args[])
+    {
+                
+                
+        String input_file = args[0];
+        String output_file =  args[1];
+        int increment_count = Integer.parseInt(args[2]);
+                
+                /** The value for the PageRank dampening factor */
+        double damping_factor = Double.parseDouble(args[3]);
+        pagerank(input_file, output_file, increment_count, damping_factor);
+                
+    }
+        
+
+
+}
