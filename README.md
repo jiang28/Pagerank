@@ -1,5 +1,5 @@
 <h1 align="center">Hi 👋, I'm Chen Jiang</h1>
-<h3 align="center">A Ph.D candidate in Auburn University</h3>
+<h3 align="center">A Ph.D candidate at Auburn University</h3>
 
 - 🔭 I’m currently working on [Real-estate hotspot prediction](https://github.com/jiang28/Real-Estate)
 
